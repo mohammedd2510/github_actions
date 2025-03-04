@@ -1,0 +1,51 @@
+FROM ghcr.io/actions/actions-runner:latest
+
+USER root
+
+# Install dependencies and clean up package cache
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    git \
+    zip \
+    bash \
+    jq \
+    xz-utils \
+    openjdk-17-jdk \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Set Java environment
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
+# Install Flutter 3.27.4
+ENV FLUTTER_VERSION=3.27.4
+ENV FLUTTER_HOME=/opt/flutter-${FLUTTER_VERSION}
+
+RUN curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz \
+    | tar -xJ -C /opt/ \
+    && mv /opt/flutter /opt/flutter-${FLUTTER_VERSION} \
+    && ln -s /opt/flutter-${FLUTTER_VERSION} /opt/flutter
+
+# Remove unnecessary Flutter files to reduce image size
+RUN rm -rf ${FLUTTER_HOME}/bin/cache/artifacts \
+    ${FLUTTER_HOME}/bin/cache/pkg \
+    ${FLUTTER_HOME}/bin/cache/dart-sdk/bin/dartaotruntime \
+    ${FLUTTER_HOME}/bin/cache/dart-sdk/bin/utils
+
+# Change ownership and grant full permissions to runner
+RUN chown -R runner:runner ${FLUTTER_HOME} \
+    && chmod -R 777 ${FLUTTER_HOME} \
+    && git config --global --add safe.directory ${FLUTTER_HOME}
+
+# Ensure Flutter is in PATH
+ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
+
+# Switch to runner user
+USER runner
+
+# Set Flutter safe directory for Git
+RUN git config --global --add safe.directory ${FLUTTER_HOME}
+
+
+ENTRYPOINT ["/home/runner/run.sh"]

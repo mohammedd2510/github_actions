@@ -31,12 +31,6 @@ RUN curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/sta
     && mv /opt/flutter /opt/flutter-${FLUTTER_VERSION} \
     && ln -s /opt/flutter-${FLUTTER_VERSION} /opt/flutter
 
-# Remove unnecessary Flutter files to reduce image size
-RUN rm -rf ${FLUTTER_HOME}/bin/cache/artifacts \
-    ${FLUTTER_HOME}/bin/cache/pkg \
-    ${FLUTTER_HOME}/bin/cache/dart-sdk/bin/dartaotruntime \
-    ${FLUTTER_HOME}/bin/cache/dart-sdk/bin/utils
-
 # Change ownership and grant full permissions to runner
 RUN chown -R runner:runner ${FLUTTER_HOME} \
     && chmod -R 777 ${FLUTTER_HOME} \
@@ -64,6 +58,9 @@ RUN yes | sdkmanager --licenses \
 # Ensure runner user has permissions
 RUN chown -R runner:runner ${ANDROID_SDK_ROOT} \
     && chmod -R 777 ${ANDROID_SDK_ROOT}
+
+RUN flutter doctor --android-licenses && flutter precache
+
 # Switch to runner user
 USER runner
 

@@ -10,9 +10,13 @@ RUN apt-get update && apt-get install -y \
     zip \
     bash \
     jq \
+    wget \
+    lib32stdc++6 \
+    lib32z1 \
     xz-utils \
     openjdk-17-jdk \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 
 # Set Java environment
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
@@ -41,6 +45,25 @@ RUN chown -R runner:runner ${FLUTTER_HOME} \
 # Ensure Flutter is in PATH
 ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
 
+# Set up Android SDK
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV ANDROID_HOME=${ANDROID_SDK_ROOT}
+ENV PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/emulator:${PATH}"
+
+# Download and install Android Command Line Tools
+RUN mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools \
+    && curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -o cmdline-tools.zip \
+    && unzip cmdline-tools.zip -d ${ANDROID_SDK_ROOT}/cmdline-tools \
+    && mv ${ANDROID_SDK_ROOT}/cmdline-tools/cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest \
+    && rm cmdline-tools.zip
+
+# Accept SDK licenses and install SDK packages
+RUN yes | sdkmanager --licenses \
+    && sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+# Ensure runner user has permissions
+RUN chown -R runner:runner ${ANDROID_SDK_ROOT} \
+    && chmod -R 777 ${ANDROID_SDK_ROOT}
 # Switch to runner user
 USER runner
 

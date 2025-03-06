@@ -33,5 +33,5 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: 1staksregistry.azurecr.io/flutter_arc_runner:v1.3
+          tags: 1staksregistry.azurecr.io/flutter_arc_runner:v1.4
           file: flutter_Dockerfile

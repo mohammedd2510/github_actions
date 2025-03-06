@@ -59,9 +59,6 @@ RUN yes | sdkmanager --licenses \
 RUN chown -R runner:runner ${ANDROID_SDK_ROOT} \
     && chmod -R 777 ${ANDROID_SDK_ROOT}
 
-# Switch to runner user
-USER runner
-
 RUN flutter doctor --android-licenses && flutter precache
 
 # Set Flutter safe directory for Git
